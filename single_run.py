@@ -2,7 +2,6 @@ import whisper
 import srt
 from datetime import timedelta
 import string
-
 filename = input(".mp3 File Name (do not include .mp3)")
 
 
