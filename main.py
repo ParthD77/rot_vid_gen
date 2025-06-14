@@ -17,7 +17,7 @@ from PIL import Image
 if not hasattr(Image, 'ANTIALIAS'):
     Image.ANTIALIAS = Image.Resampling.LANCZOS
 
-
+# get path and enter folder for location
 current_dir = Path().resolve()
 parent_dir = current_dir.parent
 filename = input("Folder name (no .extension): ")
@@ -52,7 +52,6 @@ with client.audio.speech.with_streaming_response.create(
     response.stream_to_file(fileloc+"_body.mp3")
 
 
-
 # TAKE VIDEO AUDIO AND COMBINE THEM
 # WRITE THE GENERATED SRT FILE TO THE VIDEO
 # Load video and audio
@@ -67,12 +66,12 @@ full_audio = mp.concatenate_audioclips([audio_title, audio_body])
 video = video.set_audio(full_audio)
 
 
-
 # TAKE THE MP3 AND CREATE THE SRT FILE (SUBTITLES)
 # make subtitles from audio
 model = whisper.load_model("turbo")
 result = model.transcribe(fileloc+"_body.mp3", verbose=False, word_timestamps=True)
 
+# offset to make the subtitles display after title card finishes displaying
 off_set = audio_title.duration
 words_per_segment = 2
 subtitles = []
@@ -99,7 +98,7 @@ for segment in result['segments']:
         start_time = timedelta(seconds=word_group[0]['start'] + off_set)
         end_time = timedelta(seconds=word_group[-1]['end'] + off_set)
 
-        # Build content string without punctuation
+        # Build content string without some punctuation
         content = ""
         allowed_punc = ["'", "?", "."]
         for word_data in word_group:
@@ -119,21 +118,22 @@ for segment in result['segments']:
         subtitles.append(subtitle)
         index += 1
 
-# Write the subtitles to an .srt file
-with open(fileloc+".srt", "w", encoding="utf-8") as f:
-    f.write(srt.compose(subtitles))
 
+# make the subtitles into a srt format again
+srt_content = srt.compose(subtitles)
 
-# generate background png and title text
+# generate background png and position it
 title_bg = mp.ImageClip(str(parent_dir/"title.png")).set_duration(audio_title.duration)
 title_bg = title_bg.resize(width=video.w-50)  # match video width
 title_bg = title_bg.set_position(("center", "center"))
 
-
+# make the text boundries withing the image and ofset them to fit proppertly under username
 text_width = title_bg.w
 text_height = title_bg.h
 text_pos = ((video.w - title_bg.w) // 2 + 20, (video.h - title_bg.h) // 2 + 60)
 
+
+# create text
 title_text = mp.TextClip(
     title,
     fontsize=50,
@@ -144,6 +144,8 @@ title_text = mp.TextClip(
     align="West"
 ).set_duration(audio_title.duration).set_position(text_pos)
 
+
+# set it to display as long as title is being read
 title_text = title_text.set_duration(audio_title.duration)
 title_clip = mp.CompositeVideoClip(
     [title_bg, title_text],
@@ -151,10 +153,9 @@ title_clip = mp.CompositeVideoClip(
 ).set_duration(audio_title.duration)
 
 
+# make the srt readable for subtitles clip generation
+subtitles = list(srt.parse(srt_content))
 
-# Load and parse the .srt file
-with open(fileloc+".srt", "r", encoding="utf-8") as f:
-    subtitles = list(srt.parse(f.read()))
 
 # Create text clips for each subtitle
 sub_clips = []
@@ -181,7 +182,9 @@ for sub in subtitles:
     
 
     sub_clips.append(txt_clip)
-sub_clips.insert(0, title_clip)
+
+# add the title to the start of the clip sequence and the subtitles display
+sub_clips.insert(0, title_clip) 
 
 # Combine video with subtitles and trim it to end after story finishes
 ending_buffer = 0.5
