@@ -7,9 +7,13 @@ import whisper
 import string
 from openai import OpenAI
 
+"""
+Maybe add it so the text file and video are both in big folder and it creates a sub folder where it puts everything and moves the text file for organization
+"""
+
 
 # some stupid shit needed for it to not throw instilation error
-mpy_conf.change_settings({"IMAGEMAGICK_BINARY": "C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick.exe"})  # ADJUST this path if needed
+#mpy_conf.change_settings({"IMAGEMAGICK_BINARY": "C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick.exe"})  # ADJUST this path if needed
 
 # some downgrade needed for pillow antialias
 from PIL import Image
@@ -18,10 +22,12 @@ if not hasattr(Image, 'ANTIALIAS'):
     Image.ANTIALIAS = Image.Resampling.LANCZOS
 
 # get path and enter folder for location
-current_dir = Path().resolve()
+current_dir = Path(__file__).parent.resolve()
 parent_dir = current_dir.parent
 filename = input("Folder name (no .extension): ")
+videoname = input("Enter the large video name (no .extension): ")
 
+videoloc = str(parent_dir / videoname)
 fileloc = str(parent_dir / filename / filename)
 
 # read the story
@@ -38,7 +44,7 @@ with client.audio.speech.with_streaming_response.create(
     model="gpt-4o-mini-tts",
     voice="ash",
     input=title,
-    speed=1.2
+    speed=1.4
 ) as response:
     response.stream_to_file(fileloc+"_title.mp3")
 
@@ -47,20 +53,41 @@ with client.audio.speech.with_streaming_response.create(
     model="gpt-4o-mini-tts",
     voice="ash",
     input=body,
-    speed=1.2
+    speed=1.4
 ) as response:
     response.stream_to_file(fileloc+"_body.mp3")
 
+ending_buffer = 0.5
 
 # TAKE VIDEO AUDIO AND COMBINE THEM
 # WRITE THE GENERATED SRT FILE TO THE VIDEO
-# Load video and audio
-video = mp.VideoFileClip(fileloc+".mp4").without_audio()
+# Load long video and audio
+long_video = mp.VideoFileClip(videoloc+".mp4").without_audio()
 
 # combine title and body audios
 audio_title = mp.AudioFileClip(fileloc+"_title.mp3")
 audio_body = mp.AudioFileClip(fileloc+"_body.mp3")
 full_audio = mp.concatenate_audioclips([audio_title, audio_body])
+
+# if script surpasses video length
+if (long_video.duration) < (full_audio.duration + ending_buffer):
+    raise ValueError("The long video is too short for this script.")
+
+# get the cut long video to script size
+video = long_video.subclip(0, (full_audio.duration + ending_buffer))
+
+# only rewrite if more than 5 seconds left
+if long_video.duration - (full_audio.duration + ending_buffer) <= 5:
+    print("The large video has been completely used up after this video. Replace it now.")
+else:
+    # warning for less than 90 seconds left
+    if long_video.duration - (full_audio.duration + ending_buffer) <= 90:
+        print("The large video has less than 90 seconds left.")
+
+    # cut the used portion from the larger video
+    remaining_video = long_video.subclip(full_audio.duration + ending_buffer)
+    remaining_video.write_videofile(videoloc+".mp4", codec="libx264", audio_codec="aac")
+
 
 # set the video to have audio
 video = video.set_audio(full_audio)
@@ -187,7 +214,6 @@ for sub in subtitles:
 sub_clips.insert(0, title_clip) 
 
 # Combine video with subtitles and trim it to end after story finishes
-ending_buffer = 0.5
 final = mp.CompositeVideoClip([video] + sub_clips)
 final = final.set_duration(full_audio.duration + ending_buffer)
 
