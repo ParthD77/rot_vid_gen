@@ -6,6 +6,7 @@ from pathlib import Path
 import whisper
 import string
 from openai import OpenAI
+import os
 
 """
 Maybe add it so the text file and video are both in big folder and it creates a sub folder where it puts everything and moves the text file for organization
@@ -13,7 +14,9 @@ Maybe add it so the text file and video are both in big folder and it creates a 
 
 
 # some stupid shit needed for it to not throw instilation error
-#mpy_conf.change_settings({"IMAGEMAGICK_BINARY": "C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick.exe"})  # ADJUST this path if needed
+# adjust them as needed for your install locations
+mpy_conf.change_settings({"IMAGEMAGICK_BINARY": "C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe"})  
+os.environ["PATH"] += os.pathsep + r"C:\Users\parth\Downloads\Compressed\ffmpeg-2025-06-23-git-e6298e0759-full_build\bin"  
 
 # some downgrade needed for pillow antialias
 from PIL import Image
@@ -44,7 +47,7 @@ with client.audio.speech.with_streaming_response.create(
     model="gpt-4o-mini-tts",
     voice="ash",
     input=title,
-    speed=1.4
+    speed=1.25
 ) as response:
     response.stream_to_file(fileloc+"_title.mp3")
 
@@ -53,7 +56,7 @@ with client.audio.speech.with_streaming_response.create(
     model="gpt-4o-mini-tts",
     voice="ash",
     input=body,
-    speed=1.4
+    speed=1.25
 ) as response:
     response.stream_to_file(fileloc+"_body.mp3")
 
@@ -84,9 +87,9 @@ else:
     if long_video.duration - (full_audio.duration + ending_buffer) <= 90:
         print("The large video has less than 90 seconds left.")
 
-    # cut the used portion from the larger video
+    # cut the used portion from the larger video and save to a temp file 
     remaining_video = long_video.subclip(full_audio.duration + ending_buffer)
-    remaining_video.write_videofile(videoloc+".mp4", codec="libx264", audio_codec="aac")
+    remaining_video.write_videofile(videoloc+"_temp.mp4", codec="libx264", audio_codec="aac")
 
 
 # set the video to have audio
@@ -157,13 +160,13 @@ title_bg = title_bg.set_position(("center", "center"))
 # make the text boundries withing the image and ofset them to fit proppertly under username
 text_width = title_bg.w
 text_height = title_bg.h
-text_pos = ((video.w - title_bg.w) // 2 + 20, (video.h - title_bg.h) // 2 + 60)
+text_pos = ((video.w - title_bg.w) // 2 + 20, (video.h - title_bg.h) // 2 + 30)
 
 
 # create text
 title_text = mp.TextClip(
     title,
-    fontsize=50,
+    fontsize=60,
     color="black",
     font="Arial-Bold",
     method="caption",
@@ -219,3 +222,9 @@ final = final.set_duration(full_audio.duration + ending_buffer)
 
 # Export final video
 final.write_videofile(fileloc+"_finished.mp4", codec="libx264", audio_codec="aac")
+
+
+# temprarily store path for videos to be replaced by cleanup
+with open("tempdata.txt", "w") as f:
+    f.write(videoloc+".mp4\n")
+    f.write(videoloc+"_temp.mp4")

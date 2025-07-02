@@ -3,23 +3,23 @@ To use:
     Create a folder beside the rot_vid_gen folder and name it
     Add your .txt script to the folder and name it the same as the folder
     Ensure both files (folder, script) have the same name
-    Run the Script
+    Run main.bat and enter names
 
 
 Dependencies:
     pip install moviepy==1.0.3
     pip install srt
     pip install -U openai-whisper
-    ffmpeg download from web
+    ffmpeg download from web and add it as a system variable (Path)
     download imagemagick from chrome for moviepy to work  *on install check ADD to PATH and Install leacy utilities(convert)
     OpenApi key must be set as a env vairable run this in cmd: $env:OPENAI_API_KEY="your-api-key-here" OR
         go into computers env variables and add it there
-    line 12 in code file pathh might need to be changed depending on if Magik works or not
+    line 17-18 in code file pathh might need to be changed depending on if Magik works or not
 
 
 Warnings:
-    DO NOT HARD CODE API KEY, it can easily be stolen if uploaded anywhere, use env variables instead
-    Your OpenApi key account must also have loaded funds in it (it costs less than a few cents per run)
+    DO NOT HARD CODE API KEY, it can easily be stolen if uploaded anywhere, use env variables instead,
+        your OpenApi key account must also have loaded funds in it (it costs less than a few cents per run)
     Ensure there is a title background image beside the rot_vid_gen folder called title.png (400x200)
 
 # IF MOVIEPY FAILS RUN
