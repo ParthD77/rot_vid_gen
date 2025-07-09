@@ -43,20 +43,29 @@ with open(text_file_path, "r", encoding="utf-8") as f:
 # TEXT TO SPEECH
 # just the title
 client = OpenAI()
+MODEL = "gpt-4o-mini-tts"
+VOICE = "ash"
+SPEED = 1.25
+INSTRUCTIONS = instructions = """Confident, calm narrator with a wey, ironic tone. fast-paced, energetic, smooth delivery. 
+    Slightly sarcastic during twists or absurd moments. Use natural pauses before punchlines. Understated but slightly amused,
+    like someone reading Reddit stories with quiet authority. Clear pronunciation, no emotion overload—just enough to stay engaging."""
+
 with client.audio.speech.with_streaming_response.create(
-    model="gpt-4o-mini-tts",
-    voice="ash",
+    model=MODEL,
+    voice=VOICE,
     input=title,
-    speed=1.25
+    speed=SPEED,
+    instructions=INSTRUCTIONS
 ) as response:
     response.stream_to_file(fileloc+"_title.mp3")
 
 # just the body
 with client.audio.speech.with_streaming_response.create(
-    model="gpt-4o-mini-tts",
-    voice="ash",
+    model=MODEL,
+    voice=VOICE,
     input=body,
-    speed=1.25
+    speed=SPEED,
+    instructions=INSTRUCTIONS
 ) as response:
     response.stream_to_file(fileloc+"_body.mp3")
 
