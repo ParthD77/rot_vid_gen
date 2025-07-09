@@ -9,7 +9,8 @@ from openai import OpenAI
 import os
 
 """
-Maybe add it so the text file and video are both in big folder and it creates a sub folder where it puts everything and moves the text file for organization
+Move folders.
+One just for scripts, one for completed videos, one for video fragments.
 """
 
 
@@ -48,7 +49,7 @@ with open(text_file_path, "r", encoding="utf-8") as f:
 if gender == "M":
     VOICE = "ash"
 else:
-    VOICE = "Nova"
+    VOICE = "nova"
 client = OpenAI()
 MODEL = "gpt-4o-mini-tts"
 SPEED = 1.25
@@ -173,9 +174,9 @@ title_bg = title_bg.resize(width=video.w-50)  # match video width
 title_bg = title_bg.set_position(("center", "center"))
 
 # make the text boundries withing the image and ofset them to fit proppertly under username
-text_width = title_bg.w
+text_width = title_bg.w-15
 text_height = title_bg.h
-text_pos = ((video.w - title_bg.w) // 2 + 20, (video.h - title_bg.h) // 2 + 30)
+text_pos = ((video.w - title_bg.w) // 2 + 20, (video.h - title_bg.h) // 2 + 50)
 
 
 # create text
