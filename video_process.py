@@ -29,6 +29,9 @@ current_dir = Path(__file__).parent.resolve()
 parent_dir = current_dir.parent
 filename = input("Folder name (no .extension): ")
 videoname = input("Enter the large video name (no .extension): ")
+gender = input("Gender (M for male, F for female)")
+while gender != "M" and gender != "F":
+    gender = input("Gender (M for male, F for female)")
 
 videoloc = str(parent_dir / videoname)
 fileloc = str(parent_dir / filename / filename)
@@ -42,11 +45,14 @@ with open(text_file_path, "r", encoding="utf-8") as f:
 
 # TEXT TO SPEECH
 # just the title
+if gender == "M":
+    VOICE = "ash"
+else:
+    VOICE = "Nova"
 client = OpenAI()
 MODEL = "gpt-4o-mini-tts"
-VOICE = "ash"
 SPEED = 1.25
-INSTRUCTIONS = instructions = """Confident, calm narrator with a wey, ironic tone. fast-paced, energetic, smooth delivery. 
+INSTRUCTIONS = instructions = """Smooth quick engaging voice. Confident, calm narrator.
     Slightly sarcastic during twists or absurd moments. Use natural pauses before punchlines. Understated but slightly amused,
     like someone reading Reddit stories with quiet authority. Clear pronunciation, no emotion overload—just enough to stay engaging."""
 
